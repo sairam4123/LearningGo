@@ -93,6 +93,7 @@ func CLIDeleteTodo() error {
 	saveTodos(todos)
 	return nil
 }
+
 func CLIUpdateStatus() error {
 	todos, err := loadTodos()
 	if err != nil {
