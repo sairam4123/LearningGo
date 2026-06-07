@@ -8,6 +8,8 @@ type World struct {
 
 	bsections map[string]*BlockSection
 
+	TrackGraph *TrackGraph
+
 	occupiedTracks map[*TrainData]*TrackData
 }
 
@@ -52,4 +54,24 @@ func (w *World) Init() {
 	w.bsections = make(map[string]*BlockSection)
 	w.occupiedTracks = make(map[*TrainData]*TrackData)
 
+	w.TrackGraph = &TrackGraph{}
+	w.TrackGraph.Init()
+
+}
+
+func (w *World) NewStation(stnCode string, stnName string) *Station {
+	stn := &Station{
+		Code: stnCode,
+		Name: stnName,
+	}
+	w.AddStation(stn)
+	return stn
+}
+
+func (w *World) NewBlockSection(id string) *BlockSection {
+	bsec := &BlockSection{
+		Id: id,
+	}
+	w.AddBlockSection(bsec)
+	return bsec
 }

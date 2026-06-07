@@ -1,11 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"trainapp/railway"
 	"trainapp/units"
 )
 
-func main() {
+func mainOld() {
 	sim := railway.Sim{}
 
 	world := railway.World{}
@@ -203,4 +204,199 @@ func main() {
 	sim.InitWorld()
 
 	sim.Run()
+}
+
+func main() {
+
+	PLATFORM_TRACK_LENGTH := 800.0
+	PLATFORM_LENGTH := 600.0
+
+	sim := railway.Sim{}
+
+	world := &railway.World{}
+	world.Init()
+	sim.SetWorld(world)
+
+	tpj := world.NewStation("TPJ", "Tiruchy Jn")
+	tpj.Init()
+	pdkt := world.NewStation("PDKT", "Pudukkottai")
+	tpj.Init()
+
+	tpjPf1S := railway.TrackPoint{
+		Id:        "tpjPf1S",
+		IsDeadEnd: true,
+	}
+	tpjPf1E := railway.TrackPoint{
+		Id: "tpjPf1E",
+	}
+
+	tpjPf2S := railway.TrackPoint{
+		Id:        "tpjPf2S",
+		IsDeadEnd: true,
+	}
+	tpjPf2E := railway.TrackPoint{
+		Id: "tpjPf2E",
+	}
+
+	tpjPf3S := railway.TrackPoint{
+		Id:        "tpjPf3S",
+		IsDeadEnd: true,
+	}
+	tpjPf3E := railway.TrackPoint{
+		Id: "tpjPf3E",
+	}
+
+	tpjPf1 := &railway.TrackData{
+		Id:     "tpjPf1",
+		Length: units.M(PLATFORM_TRACK_LENGTH),
+	}
+
+	tpjPf2 := &railway.TrackData{
+		Id:     "tpjPf2",
+		Length: units.M(PLATFORM_TRACK_LENGTH),
+	}
+
+	tpjPf3 := &railway.TrackData{
+		Id:     "tpjPf3",
+		Length: units.M(PLATFORM_TRACK_LENGTH),
+	}
+
+	world.TrackGraph.AddTrack(&tpjPf1S, &tpjPf1E, tpjPf1)
+	world.TrackGraph.AddTrack(&tpjPf2S, &tpjPf2E, tpjPf2)
+	world.TrackGraph.AddTrack(&tpjPf3S, &tpjPf3E, tpjPf3)
+
+	tpj.AddPlatform(&railway.Platform{
+		Track:  tpjPf1,
+		Length: units.M(PLATFORM_LENGTH),
+	})
+
+	tpj.AddPlatform(&railway.Platform{
+		Track:  tpjPf2,
+		Length: units.M(PLATFORM_LENGTH),
+	})
+
+	tpj.AddPlatform(&railway.Platform{
+		Track:  tpjPf3,
+		Length: units.M(PLATFORM_LENGTH),
+	})
+
+	pdktPf1S := railway.TrackPoint{
+		Id: "pdktPf1S",
+	}
+
+	pdktPf1E := railway.TrackPoint{
+		Id:        "pdktPf1E",
+		IsDeadEnd: true,
+	}
+
+	pdktPf2S := railway.TrackPoint{
+		Id: "pdktPf2S",
+	}
+
+	pdktPf2E := railway.TrackPoint{
+		Id:        "pdktPf2E",
+		IsDeadEnd: true,
+	}
+
+	pdktPf1 := railway.TrackData{
+		Id:     "pdktPf1",
+		Length: units.M(PLATFORM_TRACK_LENGTH),
+	}
+
+	pdktPf2 := railway.TrackData{
+		Id:     "pdktPf2",
+		Length: units.M(PLATFORM_TRACK_LENGTH),
+	}
+
+	world.TrackGraph.AddTrack(&pdktPf1S, &pdktPf1E, &pdktPf1)
+	world.TrackGraph.AddTrack(&pdktPf2S, &pdktPf2E, &pdktPf2)
+
+	tpjSw1 := railway.TrackPoint{
+		Id: "tpjSw1",
+	}
+
+	tpjPf1ESw1 := railway.TrackData{
+		Id:     "tpjPf1ESw1",
+		Length: units.M(100),
+	}
+	tpjPf2ESw1 := railway.TrackData{
+		Id:     "tpjPf2ESw1",
+		Length: units.M(100),
+	}
+
+	tpjPf3ESw1 := railway.TrackData{
+		Id:     "tpjPf3ESw1",
+		Length: units.M(100),
+	}
+
+	world.TrackGraph.AddTrack(&tpjPf1E, &tpjSw1, &tpjPf1ESw1)
+	world.TrackGraph.AddTrack(&tpjPf2E, &tpjSw1, &tpjPf2ESw1)
+	world.TrackGraph.AddTrack(&tpjPf3E, &tpjSw1, &tpjPf3ESw1)
+
+	pdktSw1 := railway.TrackPoint{
+		Id: "pdktSw1",
+	}
+
+	pdktPf1SSw1 := railway.TrackData{
+		Id:     "pdktPf1SSw1",
+		Length: units.M(100),
+	}
+
+	pdktPf2SSw1 := railway.TrackData{
+		Id:     "pdktPf2SSw1",
+		Length: units.M(100),
+	}
+
+	world.TrackGraph.AddTrack(&pdktPf1S, &pdktSw1, &pdktPf1SSw1)
+	world.TrackGraph.AddTrack(&pdktPf2S, &pdktSw1, &pdktPf2SSw1)
+
+	bsecTpjPdkt := world.NewBlockSection("bsecTpjPdkt")
+	bsecTpjPdkt.Init(tpj, pdkt)
+	bsTpjPdkt0 := railway.TrackData{
+		Id:     "bsTpjPdkt0",
+		Length: units.KM(5),
+	}
+	bsTpjPdkt1 := railway.TrackData{
+		Id:     "bsTpjPdkt1",
+		Length: units.KM(16),
+	}
+	bsTpjPdkt2 := railway.TrackData{
+		Id:     "bsTpjPdkt2",
+		Length: units.KM(5),
+	}
+	krurCp1 := railway.TrackPoint{
+		Id: "krurCp1",
+	}
+	tpjCp1 := railway.TrackPoint{
+		Id: "tpjCp1", // checkpoint or like some intermediate track point (maybe rail joints?, something doesn't matter as-of-now)
+	}
+	pdktCp1 := railway.TrackPoint{
+		Id: "pdktCp1",
+	}
+
+	bsTpjKrur0 := railway.TrackData{
+		Id:     "bsTpjKrur",
+		Length: units.KM(7),
+	}
+	bsKrurPdkt0 := railway.TrackData{
+		Id:     "bsKrurPdkt0",
+		Length: units.KM(7),
+	}
+	
+	world.TrackGraph.AddTrack(&tpjSw1, &tpjCp1, &bsTpjPdkt0)
+	world.TrackGraph.AddTrack(&tpjCp1, &krurCp1, &bsTpjKrur0)
+	world.TrackGraph.AddTrack(&krurCp1, &pdktCp1, &bsKrurPdkt0)
+	world.TrackGraph.AddTrack(&tpjCp1, &pdktCp1, &bsTpjPdkt1)
+	world.TrackGraph.AddTrack(&pdktCp1, &pdktSw1, &bsTpjPdkt2)
+
+	bsecTpjPdkt.AddTrack(&bsTpjPdkt0)
+	bsecTpjPdkt.AddTrack(&bsTpjPdkt1)
+	bsecTpjPdkt.AddTrack(&bsTpjPdkt2)
+
+	world.TrackGraph.BuildCacheMap()
+	path := world.TrackGraph.FindPath(&tpjPf1S, &pdktPf1E)
+	for _, edge := range path {
+		fmt.Printf("%s -> %s (via %s)\n", edge.From.Id, edge.To.Id, edge.Track.Id)
+	}
+
 }

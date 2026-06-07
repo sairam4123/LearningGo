@@ -20,6 +20,7 @@ type TrackData struct {
 	ReservedBy *TrainData
 	OccupiedBy *TrainData
 
+	// Track related
 	Direction TrackDirection
 	Length    units.Meters
 }

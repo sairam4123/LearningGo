@@ -22,5 +22,8 @@ func (stn *Station) Init() {
 }
 
 func (stn *Station) AddPlatform(pfData *Platform) {
+	if pfData.Id == "" {
+		pfData.Id = pfData.Track.Id
+	}
 	stn.Platforms = append(stn.Platforms, pfData)
 }

@@ -6,8 +6,6 @@ type BlockSection struct {
 	Id   string
 
 	tracks []*TrackData
-
-	// Waiting []*TrainData
 }
 
 func (bsec *BlockSection) Init(stnA *Station, stnB *Station) {
