@@ -3,14 +3,14 @@ package railway
 import "fmt"
 
 type OccupationData struct {
-	track   *TrackData
+	track   *TrackSegment
 	ctrller IController
-	train   *TrainData
+	train   *Train
 }
 
 type IController interface {
-	FindAvailableTrack() (*TrackData, error)
-	Acquire(train *TrainData, expectedTrackId string) (*OccupationData, bool)
+	FindAvailableTrack() (*TrackSegment, error)
+	Acquire(train *Train, expectedTrackId string) (*OccupationData, bool)
 	Release(occup *OccupationData)
 }
 
@@ -18,17 +18,17 @@ type StationController struct {
 	station *Station
 	sim     *Sim
 
-	waiting []*TrainData // Must be FIFO
+	waiting []*Train // Must be FIFO
 }
 
 type BlockSectionController struct {
 	bsec *BlockSection
 	sim  *Sim
 
-	waiting []*TrainData
+	waiting []*Train
 }
 
-func (ctrl *StationController) FindAvailableTrack() (*TrackData, error) {
+func (ctrl *StationController) FindAvailableTrack() (*TrackSegment, error) {
 	for _, pf := range ctrl.station.Platforms {
 		// ignore direction for now
 		// fmt.Printf("Track Available %s -> %t\n", pf.track.Id, pf.track.IsAvailable())
@@ -39,7 +39,7 @@ func (ctrl *StationController) FindAvailableTrack() (*TrackData, error) {
 	return nil, fmt.Errorf("Cannot find any available tracks")
 }
 
-func (ctrl *StationController) Acquire(train *TrainData, expectedTrackId string) (*OccupationData, bool) {
+func (ctrl *StationController) Acquire(train *Train, expectedTrackId string) (*OccupationData, bool) {
 	// ignore expectedTrackId for now
 	track, err := ctrl.FindAvailableTrack()
 	if err != nil {
@@ -78,7 +78,7 @@ func (ctrl *StationController) Release(occup *OccupationData) {
 	}
 }
 
-func (ctrl *BlockSectionController) FindAvailableTrack() (*TrackData, error) {
+func (ctrl *BlockSectionController) FindAvailableTrack() (*TrackSegment, error) {
 	for _, trk := range ctrl.bsec.tracks {
 		// fmt.Printf("Track Available %s -> %t\n", trk.Id, trk.IsAvailable())
 		// ignore direction for now
@@ -89,7 +89,7 @@ func (ctrl *BlockSectionController) FindAvailableTrack() (*TrackData, error) {
 	return nil, fmt.Errorf("Cannot find any available tracks")
 }
 
-func (ctrl *BlockSectionController) Acquire(train *TrainData, expectedTrackId string) (*OccupationData, bool) {
+func (ctrl *BlockSectionController) Acquire(train *Train, expectedTrackId string) (*OccupationData, bool) {
 	// ignore expectedTrackId for now
 	track, err := ctrl.FindAvailableTrack()
 	if err != nil {

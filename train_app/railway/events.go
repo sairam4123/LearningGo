@@ -4,17 +4,19 @@ type RailwayEvent string
 
 const (
 	// SIM //
-	TrainEnter RailwayEvent = "TRAIN_ENTER"
-	TrainExit  RailwayEvent = "TRAIN_EXIT"
+	TrainEntered RailwayEvent = "TRAIN_ENTER"
+	TrainExited  RailwayEvent = "TRAIN_EXIT"
 
 	// STN //
-	TrainDwellEnd RailwayEvent = "TRAIN_DWELL"
+	TrainDwellEnd RailwayEvent = "TRAIN_DWELL_END"
 	TrainArrived  RailwayEvent = "TRAIN_ARRIVE"
 	TrainDeparted RailwayEvent = "TRAIN_DEPART"
 
-	// BS //
-	TrainEnterBSec RailwayEvent = "TRAIN_ENTER_BSEC"
-	TrainExitBSec  RailwayEvent = "TRAIN_EXIT_BSEC"
+	// TRK //
+	TrackReserved RailwayEvent = "TRACK_RESERVE"
+	TrackOccupied RailwayEvent = "TRACK_OCCUPY"
+	TrackReleased RailwayEvent = "TRACK_RELEASE"
 
-	TrackReleased RailwayEvent = "TRACK_RELEASED"
+	// SWT //
+	SwitchSet RailwayEvent = "SWITCH_SET"
 )

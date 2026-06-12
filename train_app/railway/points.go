@@ -5,7 +5,8 @@ import "fmt"
 type TrackPoint struct {
 	Id string
 
-	IsDeadEnd bool
+	IsDeadEnd     bool
+	IsSimBoundary bool
 }
 
 type PointController struct {
@@ -16,6 +17,16 @@ type PointController struct {
 	activeRoute *GraphEdge
 
 	isLocked bool
+}
+
+func (pt *TrackPoint) SetDeadEnd(isDeadEnd bool) *TrackPoint {
+	pt.IsDeadEnd = isDeadEnd
+	return pt
+}
+
+func (pt *TrackPoint) SetSimBoundary(isSimBdary bool) *TrackPoint {
+	pt.IsSimBoundary = isSimBdary
+	return pt
 }
 
 func (ptCtrller *PointController) MoveSwitchState(towardsPointId string) error {

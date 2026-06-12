@@ -1,11 +1,13 @@
 package railway
 
-type TrainData struct {
+type Train struct {
 	Name   string
 	Number string
 
 	curSchedulePoint int
 	schedule         []*SchedulePoint
+
+	FacingToward *TrackPoint
 
 	occupation *OccupationData
 }
@@ -18,10 +20,15 @@ type SchedulePoint struct {
 	SpPfNo      int
 }
 
-func (t *TrainData) AddSchedule(sp *SchedulePoint) {
+func (t *Train) AddSchedule(sp *SchedulePoint) {
 	t.schedule = append(t.schedule, sp)
 }
 
 func (s *SchedulePoint) ExpDwellTime() float64 {
 	return s.DeptTime - s.ArrTime
+}
+
+type TrainController struct {
+	sim   *Sim
+	train *Train
 }

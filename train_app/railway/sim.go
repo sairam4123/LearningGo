@@ -32,7 +32,7 @@ func (s *Sim) InitWorld() {
 		s.stnControllers[stn.Code] = &StationController{
 			station: stn,
 			sim:     s,
-			waiting: make([]*TrainData, 0),
+			waiting: make([]*Train, 0),
 		}
 	}
 
@@ -40,12 +40,12 @@ func (s *Sim) InitWorld() {
 		s.blockSecControllers[bsec.Id] = &BlockSectionController{
 			bsec:    bsec,
 			sim:     s,
-			waiting: make([]*TrainData, 0),
+			waiting: make([]*Train, 0),
 		}
 	}
 
 	for _, train := range s.world.trains {
-		s.des.Add(train.schedule[0].ArrTime-2.0, train.Name, TrainEnter, train)
+		s.des.Add(train.schedule[0].ArrTime-2.0, train.Name, TrainEntered, train)
 	}
 }
 
@@ -64,13 +64,17 @@ func (s *Sim) NextEvent() (des.Event[RailwayEvent], bool) {
 	return s.des.NextEvent()
 }
 
-func (s *Sim) ScheduleEvent(t float64, name string, evtype RailwayEvent, data *TrainData) {
+func (s *Sim) ScheduleEvent(t float64, name string, evtype RailwayEvent, data *Train) {
 	s.des.Add(t, name, evtype, data)
 }
 
 func (s *Sim) CurTime() float64 {
 	return s.des.CurTime
 }
+
+// func (s *Sim) GetPathController() *PathController {
+
+// }
 
 // TODO: move to TrainController, work out a way for it
 func (s *Sim) Run() {
@@ -80,8 +84,8 @@ func (s *Sim) Run() {
 			break
 		}
 		switch RailwayEvent(ev.Type) {
-		case TrainEnter:
-			train := ev.Data.(*TrainData)
+		case TrainEntered:
+			train := ev.Data.(*Train)
 			train.curSchedulePoint = 0 // enters the sim
 
 			s.des.Add(s.des.CurTime+1.0, train.Name, TrainArrived, train)
@@ -89,7 +93,7 @@ func (s *Sim) Run() {
 			// pf.track.OccupiedBy = train // occupy
 
 		case TrainArrived:
-			train := ev.Data.(*TrainData)
+			train := ev.Data.(*Train)
 			trainSchedule := train.schedule
 			curSchedule := trainSchedule[train.curSchedulePoint]
 
@@ -115,11 +119,11 @@ func (s *Sim) Run() {
 			s.des.Add(s.des.CurTime+dwellTime, train.Name, TrainDwellEnd, train)
 
 		case TrainDwellEnd:
-			train := ev.Data.(*TrainData)
+			train := ev.Data.(*Train)
 			s.des.Add(s.des.CurTime+1.0, train.Name, TrainDeparted, train)
 
 		case TrackReleased:
-			train := ev.Data.(*TrainData)
+			train := ev.Data.(*Train)
 			// train is waked up here..
 			// find the state
 			fmt.Printf("[%.2f] %s track release received, waking up...\n", s.des.CurTime, train.Name)
@@ -132,7 +136,7 @@ func (s *Sim) Run() {
 			}
 
 		case TrainDeparted:
-			train := ev.Data.(*TrainData)
+			train := ev.Data.(*Train)
 			curSchedule := train.schedule[train.curSchedulePoint]
 			curStn, ok := s.world.GetStation(curSchedule.StnCode)
 			curOccp := train.occupation
@@ -143,7 +147,7 @@ func (s *Sim) Run() {
 			if train.curSchedulePoint+1 >= len(train.schedule) {
 				train.curSchedulePoint += 1
 				curOccp.ctrller.Release(curOccp)
-				s.des.Add(s.des.CurTime+1.0, train.Name, TrainExit, train)
+				s.des.Add(s.des.CurTime+1.0, train.Name, TrainExited, train)
 			} else {
 				nextSchedule := train.schedule[train.curSchedulePoint+1]
 
@@ -165,8 +169,8 @@ func (s *Sim) Run() {
 				train.curSchedulePoint += 1
 				s.des.Add(s.des.CurTime+100.0, train.Name, TrainArrived, train)
 			}
-		case TrainExit:
-			train := ev.Data.(*TrainData)
+		case TrainExited:
+			train := ev.Data.(*Train)
 			fmt.Printf("[%.2f] %s exited simulation\n", s.des.CurTime, train.Name)
 		}
 	}

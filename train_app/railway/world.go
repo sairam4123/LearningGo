@@ -4,13 +4,11 @@ import "fmt"
 
 type World struct {
 	stations map[string]*Station
-	trains   map[string]*TrainData
+	trains   map[string]*Train
 
 	bsections map[string]*BlockSection
 
 	TrackGraph *TrackGraph
-
-	occupiedTracks map[*TrainData]*TrackData
 }
 
 func (w *World) FindBlockBwStns(aStnCode string, bStnCode string) (*BlockSection, error) {
@@ -30,7 +28,7 @@ func (w *World) GetStation(code string) (*Station, bool) {
 	return stn, ok
 }
 
-func (w *World) AddTrain(train *TrainData) {
+func (w *World) AddTrain(train *Train) {
 	w.trains[train.Number] = train
 }
 func (w *World) RemoveTrain(trainNumber string) {
@@ -50,13 +48,20 @@ func (w *World) AddBlockSection(bsec *BlockSection) {
 
 func (w *World) Init() {
 	w.stations = make(map[string]*Station)
-	w.trains = make(map[string]*TrainData)
+	w.trains = make(map[string]*Train)
 	w.bsections = make(map[string]*BlockSection)
-	w.occupiedTracks = make(map[*TrainData]*TrackData)
 
 	w.TrackGraph = &TrackGraph{}
 	w.TrackGraph.Init()
+}
 
+func (w *World) NewTrackPoint(id string) *TrackPoint {
+	tp := &TrackPoint{
+		Id:            id,
+		IsDeadEnd:     false,
+		IsSimBoundary: false,
+	}
+	return tp
 }
 
 func (w *World) NewStation(stnCode string, stnName string) *Station {

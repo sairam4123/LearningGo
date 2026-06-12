@@ -14,7 +14,7 @@ type Platform struct {
 
 	Length units.Meters
 
-	Track *TrackData
+	Track *TrackSegment
 }
 
 func (stn *Station) Init() {

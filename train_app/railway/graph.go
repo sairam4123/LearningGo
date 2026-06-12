@@ -8,28 +8,28 @@ import (
 )
 
 type GraphEdge struct {
-	Track *TrackData
+	Track *TrackSegment
 	From  *TrackPoint
 	To    *TrackPoint
 }
 
 type TrackGraph struct {
 	points map[string]*TrackPoint
-	tracks map[string]*TrackData
+	tracks map[string]*TrackSegment
 
 	Edges map[string]*GraphEdge
 
-	NeighborMap map[string]map[string]*TrackData
+	NeighborMap map[string]map[string]*TrackSegment
 }
 
 func (graph *TrackGraph) Init() {
 	graph.points = make(map[string]*TrackPoint)
 	graph.Edges = make(map[string]*GraphEdge)
-	graph.tracks = make(map[string]*TrackData)
-	graph.NeighborMap = make(map[string]map[string]*TrackData)
+	graph.tracks = make(map[string]*TrackSegment)
+	graph.NeighborMap = make(map[string]map[string]*TrackSegment)
 }
 
-func (graph *TrackGraph) AddTrack(fromPoint *TrackPoint, toPoint *TrackPoint, track *TrackData) bool {
+func (graph *TrackGraph) AddTrack(fromPoint *TrackPoint, toPoint *TrackPoint, track *TrackSegment) bool {
 	if _, ok := graph.Edges[track.Id]; ok {
 		return false
 	}
@@ -56,13 +56,13 @@ func (graph *TrackGraph) TrackBetween(fromPoint *TrackPoint, toPoint *TrackPoint
 }
 
 func (graph *TrackGraph) BuildCacheMap() {
-	graph.NeighborMap = make(map[string]map[string]*TrackData)
+	graph.NeighborMap = make(map[string]map[string]*TrackSegment)
 	for _, edge := range graph.Edges {
 		if graph.NeighborMap[edge.From.Id] == nil {
-			graph.NeighborMap[edge.From.Id] = make(map[string]*TrackData)
+			graph.NeighborMap[edge.From.Id] = make(map[string]*TrackSegment)
 		}
 		if graph.NeighborMap[edge.To.Id] == nil {
-			graph.NeighborMap[edge.To.Id] = make(map[string]*TrackData)
+			graph.NeighborMap[edge.To.Id] = make(map[string]*TrackSegment)
 		}
 
 		graph.NeighborMap[edge.From.Id][edge.To.Id] = edge.Track
@@ -105,7 +105,7 @@ func (pq *PathQueue) Pop() any {
 	return item
 }
 
-func (graph *TrackGraph) FindPath(fromPoint *TrackPoint, toPoint *TrackPoint) []*GraphEdge {
+func (graph *TrackGraph) FindPath(fromPoint *TrackPoint, toPoint *TrackPoint) Path {
 	queue := make(PathQueue, 0)
 	nodes := make(map[string]*PathNode, 0)
 	for _, vert := range graph.points {
@@ -133,12 +133,15 @@ func (graph *TrackGraph) FindPath(fromPoint *TrackPoint, toPoint *TrackPoint) []
 				parent := cur.Parent
 				if parent == nil {
 					slices.Reverse(seq)
-					return seq
+					path := Path{
+						Edges: seq,
+					}
+					return path
 				}
 				track, err := graph.TrackBetween(cur.Value, parent.Value)
 				if err != nil {
 					fmt.Println(err)
-					return make([]*GraphEdge, 0)
+					return Path{}
 				}
 
 				seq = append(seq, track)
@@ -147,6 +150,9 @@ func (graph *TrackGraph) FindPath(fromPoint *TrackPoint, toPoint *TrackPoint) []
 		}
 		// fetch element from priority queue
 		elem := heap.Pop(&queue).(*PathNode)
+		if elem.Value.IsDeadEnd {
+			continue
+		}
 		if _, ok := visited[elem.Id]; !ok {
 			visited[elem.Id] = struct{}{}
 			for key, edge := range graph.NeighborMap[elem.Id] {
@@ -161,4 +167,10 @@ func (graph *TrackGraph) FindPath(fromPoint *TrackPoint, toPoint *TrackPoint) []
 		}
 
 	}
+}
+
+type Path struct {
+	Edges []*GraphEdge
+
+	IncludesReserved bool
 }

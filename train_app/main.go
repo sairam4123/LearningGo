@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"trainapp/railway"
 	"trainapp/units"
 )
@@ -26,7 +25,7 @@ func mainOld() {
 
 	kkdi.Init()
 
-	trPdkt_Kkdi := railway.TrackData{
+	trPdkt_Kkdi := railway.TrackSegment{
 		Id:        "PDKT_KKDI",
 		Direction: railway.Bidir,
 		Length:    units.KM(20),
@@ -39,23 +38,23 @@ func mainOld() {
 
 	bsPdkt_Kkdi.AddTrack(&trPdkt_Kkdi)
 
-	trKkdi0 := railway.TrackData{
+	trKkdi0 := railway.TrackSegment{
 		Id:        "kkdi0",
 		Direction: railway.Bidir,
 		Length:    units.M(700),
 	}
-	trKkdi1 := railway.TrackData{
+	trKkdi1 := railway.TrackSegment{
 		Id:        "kkdi1",
 		Direction: railway.Bidir,
 		Length:    units.M(700),
 	}
 
-	trPdkt0 := railway.TrackData{
+	trPdkt0 := railway.TrackSegment{
 		Id:        "pdkt0",
 		Direction: railway.Bidir,
 		Length:    units.M(700),
 	}
-	trPdkt1 := railway.TrackData{
+	trPdkt1 := railway.TrackSegment{
 		Id:        "pdkt1",
 		Direction: railway.Bidir,
 		Length:    units.M(500),
@@ -95,12 +94,12 @@ func mainOld() {
 	tpj.Init()
 	world.AddStation(&tpj)
 
-	trTpj0 := railway.TrackData{
+	trTpj0 := railway.TrackSegment{
 		Id:        "tpj0",
 		Direction: railway.Bidir,
 		Length:    units.M(500),
 	}
-	trTpj1 := railway.TrackData{
+	trTpj1 := railway.TrackSegment{
 		Id:        "tpj1",
 		Direction: railway.Bidir,
 		Length:    units.M(500),
@@ -117,7 +116,7 @@ func mainOld() {
 		Track:  &trTpj1,
 	}
 
-	trTpj_Pdkt := railway.TrackData{
+	trTpj_Pdkt := railway.TrackSegment{
 		Id:        "TPJ_PDKT",
 		Direction: railway.Bidir,
 		Length:    units.KM(40),
@@ -140,12 +139,12 @@ func mainOld() {
 	tpj.AddPlatform(&tpj0)
 	tpj.AddPlatform(&tpj1)
 
-	_12606 := railway.TrainData{
+	_12606 := railway.Train{
 		Name:   "Pallavan",
 		Number: "12606",
 	}
 
-	_12605 := railway.TrainData{
+	_12605 := railway.Train{
 		Name:   "RMM Express",
 		Number: "12605",
 	}
@@ -222,48 +221,33 @@ func main() {
 	pdkt := world.NewStation("PDKT", "Pudukkottai")
 	tpj.Init()
 
-	tpjPf1S := railway.TrackPoint{
-		Id:        "tpjPf1S",
-		IsDeadEnd: true,
-	}
-	tpjPf1E := railway.TrackPoint{
-		Id: "tpjPf1E",
-	}
+	tpjPf1S := world.NewTrackPoint("tpjPf1S").SetDeadEnd(true).SetSimBoundary(true)
+	tpjPf1E := world.NewTrackPoint("tpjPf1E")
 
-	tpjPf2S := railway.TrackPoint{
-		Id:        "tpjPf2S",
-		IsDeadEnd: true,
-	}
-	tpjPf2E := railway.TrackPoint{
-		Id: "tpjPf2E",
-	}
+	tpjPf2S := world.NewTrackPoint("tpjPf2S").SetDeadEnd(true).SetSimBoundary(true)
+	tpjPf2E := world.NewTrackPoint("tpjPf2E")
 
-	tpjPf3S := railway.TrackPoint{
-		Id:        "tpjPf3S",
-		IsDeadEnd: true,
-	}
-	tpjPf3E := railway.TrackPoint{
-		Id: "tpjPf3E",
-	}
+	tpjPf3S := world.NewTrackPoint("tpjPf3S").SetDeadEnd(true).SetSimBoundary(true)
+	tpjPf3E := world.NewTrackPoint("tpjPf3E")
 
-	tpjPf1 := &railway.TrackData{
+	tpjPf1 := &railway.TrackSegment{
 		Id:     "tpjPf1",
 		Length: units.M(PLATFORM_TRACK_LENGTH),
 	}
 
-	tpjPf2 := &railway.TrackData{
+	tpjPf2 := &railway.TrackSegment{
 		Id:     "tpjPf2",
 		Length: units.M(PLATFORM_TRACK_LENGTH),
 	}
 
-	tpjPf3 := &railway.TrackData{
+	tpjPf3 := &railway.TrackSegment{
 		Id:     "tpjPf3",
 		Length: units.M(PLATFORM_TRACK_LENGTH),
 	}
 
-	world.TrackGraph.AddTrack(&tpjPf1S, &tpjPf1E, tpjPf1)
-	world.TrackGraph.AddTrack(&tpjPf2S, &tpjPf2E, tpjPf2)
-	world.TrackGraph.AddTrack(&tpjPf3S, &tpjPf3E, tpjPf3)
+	world.TrackGraph.AddTrack(tpjPf1S, tpjPf1E, tpjPf1)
+	world.TrackGraph.AddTrack(tpjPf2S, tpjPf2E, tpjPf2)
+	world.TrackGraph.AddTrack(tpjPf3S, tpjPf3E, tpjPf3)
 
 	tpj.AddPlatform(&railway.Platform{
 		Track:  tpjPf1,
@@ -280,123 +264,99 @@ func main() {
 		Length: units.M(PLATFORM_LENGTH),
 	})
 
-	pdktPf1S := railway.TrackPoint{
-		Id: "pdktPf1S",
-	}
+	pdktPf1S := world.NewTrackPoint("pdktPf1S")
+	pdktPf1E := world.NewTrackPoint("pdktPf1E").SetDeadEnd(true).SetSimBoundary(true)
 
-	pdktPf1E := railway.TrackPoint{
-		Id:        "pdktPf1E",
-		IsDeadEnd: true,
-	}
+	pdktPf2S := world.NewTrackPoint("pdktPf2S")
+	pdktPf2E := world.NewTrackPoint("pdktPf2E").SetDeadEnd(true).SetSimBoundary(true)
 
-	pdktPf2S := railway.TrackPoint{
-		Id: "pdktPf2S",
-	}
-
-	pdktPf2E := railway.TrackPoint{
-		Id:        "pdktPf2E",
-		IsDeadEnd: true,
-	}
-
-	pdktPf1 := railway.TrackData{
+	pdktPf1 := railway.TrackSegment{
 		Id:     "pdktPf1",
 		Length: units.M(PLATFORM_TRACK_LENGTH),
 	}
 
-	pdktPf2 := railway.TrackData{
+	pdktPf2 := railway.TrackSegment{
 		Id:     "pdktPf2",
 		Length: units.M(PLATFORM_TRACK_LENGTH),
 	}
 
-	world.TrackGraph.AddTrack(&pdktPf1S, &pdktPf1E, &pdktPf1)
-	world.TrackGraph.AddTrack(&pdktPf2S, &pdktPf2E, &pdktPf2)
+	world.TrackGraph.AddTrack(pdktPf1S, pdktPf1E, &pdktPf1)
+	world.TrackGraph.AddTrack(pdktPf2S, pdktPf2E, &pdktPf2)
 
-	tpjSw1 := railway.TrackPoint{
-		Id: "tpjSw1",
-	}
-
-	tpjPf1ESw1 := railway.TrackData{
+	tpjSw1 := world.NewTrackPoint("tpjSw1")
+	tpjPf1ESw1 := railway.TrackSegment{
 		Id:     "tpjPf1ESw1",
 		Length: units.M(100),
 	}
-	tpjPf2ESw1 := railway.TrackData{
+	tpjPf2ESw1 := railway.TrackSegment{
 		Id:     "tpjPf2ESw1",
 		Length: units.M(100),
 	}
 
-	tpjPf3ESw1 := railway.TrackData{
+	tpjPf3ESw1 := railway.TrackSegment{
 		Id:     "tpjPf3ESw1",
 		Length: units.M(100),
 	}
 
-	world.TrackGraph.AddTrack(&tpjPf1E, &tpjSw1, &tpjPf1ESw1)
-	world.TrackGraph.AddTrack(&tpjPf2E, &tpjSw1, &tpjPf2ESw1)
-	world.TrackGraph.AddTrack(&tpjPf3E, &tpjSw1, &tpjPf3ESw1)
+	world.TrackGraph.AddTrack(tpjPf1E, tpjSw1, &tpjPf1ESw1)
+	world.TrackGraph.AddTrack(tpjPf2E, tpjSw1, &tpjPf2ESw1)
+	world.TrackGraph.AddTrack(tpjPf3E, tpjSw1, &tpjPf3ESw1)
 
-	pdktSw1 := railway.TrackPoint{
-		Id: "pdktSw1",
-	}
+	pdktSw1 := world.NewTrackPoint("pdktSw1")
 
-	pdktPf1SSw1 := railway.TrackData{
+	pdktPf1SSw1 := railway.TrackSegment{
 		Id:     "pdktPf1SSw1",
 		Length: units.M(100),
 	}
 
-	pdktPf2SSw1 := railway.TrackData{
+	pdktPf2SSw1 := railway.TrackSegment{
 		Id:     "pdktPf2SSw1",
 		Length: units.M(100),
 	}
 
-	world.TrackGraph.AddTrack(&pdktPf1S, &pdktSw1, &pdktPf1SSw1)
-	world.TrackGraph.AddTrack(&pdktPf2S, &pdktSw1, &pdktPf2SSw1)
+	world.TrackGraph.AddTrack(pdktPf1S, pdktSw1, &pdktPf1SSw1)
+	world.TrackGraph.AddTrack(pdktPf2S, pdktSw1, &pdktPf2SSw1)
 
 	bsecTpjPdkt := world.NewBlockSection("bsecTpjPdkt")
 	bsecTpjPdkt.Init(tpj, pdkt)
-	bsTpjPdkt0 := railway.TrackData{
+	bsTpjPdkt0 := railway.TrackSegment{
 		Id:     "bsTpjPdkt0",
 		Length: units.KM(5),
 	}
-	bsTpjPdkt1 := railway.TrackData{
+	bsTpjPdkt1 := railway.TrackSegment{
 		Id:     "bsTpjPdkt1",
 		Length: units.KM(16),
 	}
-	bsTpjPdkt2 := railway.TrackData{
+	bsTpjPdkt2 := railway.TrackSegment{
 		Id:     "bsTpjPdkt2",
 		Length: units.KM(5),
 	}
-	krurCp1 := railway.TrackPoint{
-		Id: "krurCp1",
-	}
-	tpjCp1 := railway.TrackPoint{
-		Id: "tpjCp1", // checkpoint or like some intermediate track point (maybe rail joints?, something doesn't matter as-of-now)
-	}
-	pdktCp1 := railway.TrackPoint{
-		Id: "pdktCp1",
-	}
+	krurCp1 := world.NewTrackPoint("krurCp1")
+	tpjCp1 := world.NewTrackPoint("tpjCp1")
+	pdktCp1 := world.NewTrackPoint("pdktCp1")
 
-	bsTpjKrur0 := railway.TrackData{
+	bsTpjKrur0 := railway.TrackSegment{
 		Id:     "bsTpjKrur",
 		Length: units.KM(7),
 	}
-	bsKrurPdkt0 := railway.TrackData{
+	bsKrurPdkt0 := railway.TrackSegment{
 		Id:     "bsKrurPdkt0",
 		Length: units.KM(7),
 	}
-	
-	world.TrackGraph.AddTrack(&tpjSw1, &tpjCp1, &bsTpjPdkt0)
-	world.TrackGraph.AddTrack(&tpjCp1, &krurCp1, &bsTpjKrur0)
-	world.TrackGraph.AddTrack(&krurCp1, &pdktCp1, &bsKrurPdkt0)
-	world.TrackGraph.AddTrack(&tpjCp1, &pdktCp1, &bsTpjPdkt1)
-	world.TrackGraph.AddTrack(&pdktCp1, &pdktSw1, &bsTpjPdkt2)
+
+	world.TrackGraph.AddTrack(tpjSw1, tpjCp1, &bsTpjPdkt0)
+	world.TrackGraph.AddTrack(tpjCp1, krurCp1, &bsTpjKrur0)
+	world.TrackGraph.AddTrack(krurCp1, pdktCp1, &bsKrurPdkt0)
+	world.TrackGraph.AddTrack(tpjCp1, pdktCp1, &bsTpjPdkt1)
+	world.TrackGraph.AddTrack(pdktCp1, pdktSw1, &bsTpjPdkt2)
 
 	bsecTpjPdkt.AddTrack(&bsTpjPdkt0)
 	bsecTpjPdkt.AddTrack(&bsTpjPdkt1)
 	bsecTpjPdkt.AddTrack(&bsTpjPdkt2)
 
+	// this is a temp call -> TODO: Move it to Graph.FindPath() call instead or something
 	world.TrackGraph.BuildCacheMap()
-	path := world.TrackGraph.FindPath(&tpjPf1S, &pdktPf1E)
-	for _, edge := range path {
-		fmt.Printf("%s -> %s (via %s)\n", edge.From.Id, edge.To.Id, edge.Track.Id)
-	}
+
+	sim.Run()
 
 }
