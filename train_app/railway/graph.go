@@ -22,6 +22,17 @@ type TrackGraph struct {
 	NeighborMap map[string]map[string]*TrackSegment
 }
 
+func (graph *TrackGraph) FindWorldBoundaryPoint(segment *TrackSegment) *TrackPoint {
+	if from := graph.Edges[segment.Id].From; from.IsSimBoundary {
+		return from
+	}
+	if to := graph.Edges[segment.Id].To; to.IsSimBoundary {
+		return to
+	}
+
+	return nil
+}
+
 func (graph *TrackGraph) Init() {
 	graph.points = make(map[string]*TrackPoint)
 	graph.Edges = make(map[string]*GraphEdge)
@@ -166,6 +177,104 @@ func (graph *TrackGraph) FindPath(fromPoint *TrackPoint, toPoint *TrackPoint) Pa
 			}
 		}
 
+	}
+}
+
+func (graph *TrackGraph) OtherEnd(edge *GraphEdge, pointId string) *TrackPoint {
+	if edge.From.Id == pointId {
+		return edge.To
+	}
+	if edge.To.Id == pointId {
+		return edge.From
+	}
+	return nil
+}
+
+func (graph *TrackGraph) FindPathToTrack(fromPoint *TrackPoint, toSegment *TrackSegment) *Path {
+	queue := make(PathQueue, 0)
+	nodes := make(map[string]*PathNode, 0)
+	for _, vert := range graph.points {
+		nodes[vert.Id] = &PathNode{
+			Id:     vert.Id,
+			Value:  vert,
+			Cost:   math.MaxInt,
+			Parent: nil,
+		}
+	}
+
+	// set initial node cost 0
+	nodes[fromPoint.Id].Cost = 0
+	queue = append(queue, nodes[fromPoint.Id])
+	heap.Init(&queue)
+
+	var approachedPoint *TrackPoint
+	var targetPoint *TrackPoint
+
+	found := false
+
+	// path := make([]*GraphEdge, 0)
+	visited := make(map[string]struct{})
+	for {
+		if len(queue) == 0 {
+			break
+		}
+		if found {
+			break
+		}
+		// fetch element from priority queue
+		elem := heap.Pop(&queue).(*PathNode)
+
+		if _, ok := visited[elem.Id]; !ok {
+			visited[elem.Id] = struct{}{}
+			for key, edge := range graph.NeighborMap[elem.Id] {
+				newCost := elem.Cost + float64(edge.Length)
+				v := nodes[key]
+				if newCost < v.Cost {
+					v.Cost = newCost
+					v.Parent = elem
+				}
+				if edge.Id == toSegment.Id {
+					graphEdge := graph.Edges[edge.Id]
+					approachedPoint = elem.Value
+					targetPoint = graph.OtherEnd(graphEdge, approachedPoint.Id)
+					found = true
+					break
+				}
+
+				if v.Value.IsDeadEnd {
+					continue
+				}
+
+				heap.Push(&queue, v)
+			}
+		}
+
+	}
+
+	if targetPoint == nil {
+		fmt.Println("Target point is empty?!")
+		return nil
+	}
+
+	cur := nodes[targetPoint.Id]
+	seq := make([]*GraphEdge, 0)
+	for {
+		parent := cur.Parent
+		if parent == nil {
+			slices.Reverse(seq)
+			path := &Path{
+				Edges: seq,
+			}
+			return path
+		}
+		track, err := graph.TrackBetween(cur.Value, parent.Value)
+		if err != nil {
+			fmt.Println(err)
+			return nil
+		}
+
+		seq = append(seq, track)
+		cur = parent
 	}
 }
 

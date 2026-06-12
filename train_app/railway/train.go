@@ -17,7 +17,7 @@ type SchedulePoint struct {
 	StnCode     string
 	ArrTime     float64
 	DeptTime    float64
-	SpPfNo      int
+	SpPfNo      string
 }
 
 func (t *Train) AddSchedule(sp *SchedulePoint) {

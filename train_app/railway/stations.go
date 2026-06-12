@@ -12,6 +12,7 @@ type Station struct {
 type Platform struct {
 	Id string
 
+	PfNo   string
 	Length units.Meters
 
 	Track *TrackSegment
@@ -26,4 +27,13 @@ func (stn *Station) AddPlatform(pfData *Platform) {
 		pfData.Id = pfData.Track.Id
 	}
 	stn.Platforms = append(stn.Platforms, pfData)
+}
+
+func (stn *Station) StationPlatform(pfNo string) *TrackSegment {
+	for _, pf := range stn.Platforms {
+		if pf.PfNo == pfNo {
+			return pf.Track
+		}
+	}
+	return nil
 }

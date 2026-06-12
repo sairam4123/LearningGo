@@ -69,6 +69,7 @@ func (w *World) NewStation(stnCode string, stnName string) *Station {
 		Code: stnCode,
 		Name: stnName,
 	}
+	stn.Init()
 	w.AddStation(stn)
 	return stn
 }

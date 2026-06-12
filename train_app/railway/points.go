@@ -19,12 +19,12 @@ type PointController struct {
 	isLocked bool
 }
 
-func (pt *TrackPoint) SetDeadEnd(isDeadEnd bool) *TrackPoint {
+func (pt *TrackPoint) WithDeadEnd(isDeadEnd bool) *TrackPoint {
 	pt.IsDeadEnd = isDeadEnd
 	return pt
 }
 
-func (pt *TrackPoint) SetSimBoundary(isSimBdary bool) *TrackPoint {
+func (pt *TrackPoint) ConfigureSimBoundary(isSimBdary bool) *TrackPoint {
 	pt.IsSimBoundary = isSimBdary
 	return pt
 }

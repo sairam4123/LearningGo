@@ -8,7 +8,6 @@ type Event[T comparable] struct {
 	Time      float64
 	CreatedAt float64
 	Type      T
-	Name      string
 	Data      any
 }
 
@@ -49,12 +48,11 @@ func (d *DES[T]) Init() {
 	heap.Init(&d.eq)
 }
 
-func (d *DES[T]) Add(eventTime float64, name string, evtype T, data any) {
+func (d *DES[T]) Add(eventTime float64, evtype T, data any) {
 	heap.Push(&d.eq, Event[T]{
 		Time:      eventTime,
 		CreatedAt: d.CurTime,
 		Type:      evtype,
-		Name:      name,
 		Data:      data,
 	})
 }
