@@ -3,6 +3,7 @@ package railway
 import (
 	"fmt"
 	"trainapp/des"
+	"trainapp/units"
 )
 
 type Sim struct {
@@ -50,7 +51,7 @@ func (s *Sim) Init() {
 	// }
 
 	for _, train := range s.world.trains {
-		s.ScheduleEventDelta(-2.0, WorldEntered, train)
+		s.ScheduleEventAt(train.schedule[0].ArrTime-des.MinDeltaTime, WorldEntered, train)
 	}
 }
 
@@ -69,8 +70,16 @@ func (s *Sim) NextEvent() (des.Event[RailwayEvent], bool) {
 	return s.des.NextEvent()
 }
 
-func (s *Sim) ScheduleEventDelta(delta float64, evtype RailwayEvent, data *Train) {
-	s.des.Add(s.CurTime()+delta, evtype, data)
+func (s *Sim) ScheduleEventAfter(delta units.Minutes, evtype RailwayEvent, data any) {
+	s.des.Add(s.CurTime()+float64(delta), evtype, data)
+}
+
+func (s *Sim) ScheduleEventNext(evtype RailwayEvent, data any) {
+	s.des.Add(s.CurTime()+des.MinDeltaTime, evtype, data)
+}
+
+func (s *Sim) ScheduleEventAt(time float64, evType RailwayEvent, data any) {
+	s.des.Add(time, evType, data)
 }
 
 func (s *Sim) CurTime() float64 {
@@ -87,6 +96,13 @@ func (s *Sim) Run() {
 		if !ok {
 			break
 		}
+		train := ev.Data.(*Train)
+		if train.occupation != nil {
+			curTrack := train.occupation.curPath.Edges[train.occupation.curPathIdx]
+			fmt.Printf("[%.2f] %s - %s (Track %s - %dm)\n", ev.Time, ev.Type, train.Name, curTrack.Track.Id, int(curTrack.Track.Length))
+		} else {
+			fmt.Printf("[%.2f] %s - %s\n", ev.Time, ev.Type, train.Name)
+		}
 		switch RailwayEvent(ev.Type) {
 		case WorldEntered:
 			train := ev.Data.(*Train)
@@ -100,14 +116,149 @@ func (s *Sim) Run() {
 			platform := nextStn.StationPlatform(curSchedule.SpPfNo)
 			facingPoint := s.world.TrackGraph.FindWorldBoundaryPoint(platform)
 			train.FacingToward = facingPoint
-
 			// try to reserve the track to first station
-			if ok := s.dispatcher.TryReservePathToEdge(train, platform); ok {
-				s.ScheduleEventDelta(1, TrainArrived, train)
+			path, ok := s.dispatcher.TryReservePathToEdge(train, platform)
+			if !ok && path == nil {
+				fmt.Println("Path cannot be reserved")
+				return
 			}
+			train.reservation = &ReservationData{
+				train:   train,
+				curPath: path,
+				disp:    s.dispatcher,
+			}
+			// if !ok && path != nil {
+			// 	fmt.Println("Path cannot be reserved - only one")
+			// 	// it is the platform only.. in this case.. just occupy the platform directly and switch facing to other direction
+			// 	train.FacingToward = s.world.TrackGraph.OtherEnd(platform, train.FacingToward.Id)
+			// 	train.occupation = &OccupationData{
+			// 		train:      train,
+			// 		curPathIdx: 0,
+			// 		curPath: &Path{
+			// 			Edges: append(make([]*GraphEdge, 0), s.dispatcher.sim.world.TrackGraph.Edges[platform.Id]), // it's messy ik
+			// 		},
+			// 	}
+			// 	s.ScheduleEventNext(TrainArrived, train)
+			// 	return
+			// }
+
+			if ok := s.dispatcher.RequestToProceed(train, path); ok {
+				if ok := path.Edges[0].Track.Acquire(train); !ok {
+					fmt.Println("Edge cannot be acquired")
+					return
+				}
+
+				train.occupation = &OccupationData{
+					train:      train,
+					curPathIdx: 0,
+					curPath:    path,
+					disp:       s.dispatcher,
+				}
+				s.ScheduleEventNext(TrackEntered, train)
+			}
+
+		case TrackEntered:
+			train := ev.Data.(*Train)
+			curTrack := train.occupation.curPath.Edges[train.occupation.curPathIdx].Track
+			// fmt.Println("Track Entered", curTrack.Id)
+			train.FacingToward = s.world.TrackGraph.OtherEnd(curTrack, train.FacingToward.Id)
+			time := curTrack.TravelTime(train.MaxSpeed)
+			s.ScheduleEventAfter(time, TrackTravelEnd, train)
+
+		case TrackTravelEnd:
+			train := ev.Data.(*Train)
+			if len(train.occupation.curPath.Edges) <= train.occupation.curPathIdx+1 {
+				s.ScheduleEventNext(PathCompleted, train)
+			} else {
+				// acquire next track
+				nextTrack := train.occupation.curPath.Edges[train.occupation.curPathIdx+1]
+				ok := nextTrack.Track.Acquire(train)
+				if ok {
+					curTrack := train.occupation.curPath.Edges[train.occupation.curPathIdx]
+					curTrack.Track.Release(train)
+					train.occupation.curPathIdx++
+				}
+				// s.dispatcher.sim.ScheduleEventNext(TrackExited, train)
+				s.ScheduleEventNext(TrackEntered, train)
+			}
+		case PathCompleted:
+			// fmt.Println("Path completed")
+			// path complete is always within the station
+			s.ScheduleEventNext(TrainArrived, ev.Data)
+
 		case TrainArrived:
-			fmt.Printf("Train Arrived")
-			
+			// fmt.Println("Train Arrived")
+			train := ev.Data.(*Train)
+			// curTrack := train.occupation.curPath.Edges[train.occupation.curPathIdx].Track
+			curSchedule := train.schedule[train.curSchedulePoint]
+
+			s.ScheduleEventAfter(curSchedule.ExpDwellTime(s.CurTime()), TrainDwellEnd, train)
+
+		case TrainDwellEnd:
+			// fmt.Println("Train Dwell End")
+
+			train := ev.Data.(*Train)
+			// curTrack := train.occupation.curPath.Edges[train.occupation.curPathIdx].Track
+			// curSchedule := train.schedule[train.curSchedulePoint]
+			// fmt.Println(len(train.schedule), train.curSchedulePoint+1)
+			if len(train.schedule) <= train.curSchedulePoint+1 {
+				train.reservation = nil
+				s.ScheduleEventNext(TrainDeparted, train)
+				continue
+			}
+			// reserve the track to next station
+			nextSchedule := train.schedule[train.curSchedulePoint+1]
+			nextStn := s.world.stations[nextSchedule.StnCode]
+			nextPf := nextStn.StationPlatform(nextSchedule.SpPfNo)
+
+			fmt.Println("Next PF", nextPf)
+			path, ok := s.dispatcher.TryReservePathToEdge(train, nextPf)
+			if !ok {
+				fmt.Printf("Path to %s cannot be reserved", nextPf.Id)
+			}
+			// path.PPrint()
+			train.reservation = &ReservationData{
+				curPath: path,
+				train:   train,
+				disp:    s.dispatcher,
+			}
+			// fmt.Println("Dispatching to station")
+			if ok := s.dispatcher.RequestToProceed(train, path); ok {
+				train.curSchedulePoint++
+				s.ScheduleEventNext(TrainDeparted, train)
+			} else {
+				fmt.Println("Request to proceed failed, waiting..")
+			}
+
+		case TrainDeparted:
+			train := ev.Data.(*Train)
+
+			curTrack := train.occupation.curPath.Edges[train.occupation.curPathIdx]
+			if train.reservation == nil {
+				curTrack.Track.Release(train)
+				s.ScheduleEventNext(WorldExited, train)
+				continue
+			}
+
+			path := train.reservation.curPath
+
+			// fmt.Printf("Train departed %#v\n", path)
+			// s.ScheduleEventNext(TrackExited, train)
+
+			if ok := path.Edges[0].Track.Acquire(train); !ok {
+				fmt.Println("Edge cannot be acquired")
+				return
+			}
+			curTrack.Track.Release(train)
+
+			train.occupation = &OccupationData{
+				train:      train,
+				curPathIdx: 0,
+				curPath:    path,
+				disp:       s.dispatcher,
+			}
+			s.ScheduleEventNext(TrackEntered, train)
+
 		}
 	}
 }

@@ -45,20 +45,29 @@ func (t *TrackSegment) IsReserved() bool {
 	return t.OccupiedBy == nil && t.ReservedBy != nil
 }
 
-func (t *TrackSegment) Request(train *Train) bool {
-	if t.IsAvailable() {
+func (t *TrackSegment) Acquire(train *Train) bool {
+	if t.IsAvailable() || (t.IsReserved() && train.Number == t.ReservedBy.Number) {
 		t.OccupiedBy = train
 		return true
 	}
 	return false
 }
 
-func (t *TrackSegment) Release() (bool, error) {
+func (t *TrackSegment) Release(train *Train) (bool, error) {
 	if t.IsAvailable() {
 		fmt.Printf("Cannot release an empty track\n")
 		return false, fmt.Errorf("Cannot release an empty track")
 	}
-
+	if t.OccupiedBy.Number != train.Number {
+		return false, fmt.Errorf("Cannot release train occupied by another track")
+	}
+	if t.ReservedBy.Number == train.Number {
+		t.ReservedBy = nil
+	}
 	t.OccupiedBy = nil
 	return true, nil
+}
+
+func (t *TrackSegment) TravelTime(trainMaxSpeed units.MetersPerMin) units.Minutes {
+	return units.Min(float64(t.Length) / float64(trainMaxSpeed))
 }

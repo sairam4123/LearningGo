@@ -7,19 +7,29 @@ type Dispatcher struct {
 }
 
 type OccupationData struct {
-	curTrack *TrackSegment
-	train    *Train
+	train *Train
 
-	curPath *Path
+	curPathIdx int
+	curPath    *Path
 
 	disp *Dispatcher
 }
 
-func (disp *Dispatcher) TryReservePathToEdge(train *Train, to *TrackSegment) bool {
+type ReservationData struct {
+	train *Train
+
+	curPath *Path
+	disp    *Dispatcher
+}
+
+func (disp *Dispatcher) TryReservePathToEdge(train *Train, to *TrackSegment) (*Path, bool) {
 	path := disp.sim.world.TrackGraph.FindPathToTrack(train.FacingToward, to)
 	if path == nil {
-		return false
+		return nil, false
 	}
+	// if len(path.Edges) == 1 && path.Edges[0].Track.Id == to.Id {
+	// 	return path, false
+	// }
 
 	reservationFailed := false
 
@@ -39,9 +49,17 @@ func (disp *Dispatcher) TryReservePathToEdge(train *Train, to *TrackSegment) boo
 				edge.Track.ReservedBy = nil // clear the reservation
 			}
 		}
+
+		return nil, false
 	}
 
-	return true
+	return path, true
+}
+
+func (disp *Dispatcher) RequestToProceed(train *Train, path *Path) bool {
+	ok := path.EnsureAllEdgesAreReserved(train)
+
+	return ok
 }
 
 // import "fmt"

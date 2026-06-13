@@ -180,7 +180,8 @@ func (graph *TrackGraph) FindPath(fromPoint *TrackPoint, toPoint *TrackPoint) Pa
 	}
 }
 
-func (graph *TrackGraph) OtherEnd(edge *GraphEdge, pointId string) *TrackPoint {
+func (graph *TrackGraph) OtherEnd(track *TrackSegment, pointId string) *TrackPoint {
+	edge := graph.Edges[track.Id]
 	if edge.From.Id == pointId {
 		return edge.To
 	}
@@ -236,7 +237,7 @@ func (graph *TrackGraph) FindPathToTrack(fromPoint *TrackPoint, toSegment *Track
 				if edge.Id == toSegment.Id {
 					graphEdge := graph.Edges[edge.Id]
 					approachedPoint = elem.Value
-					targetPoint = graph.OtherEnd(graphEdge, approachedPoint.Id)
+					targetPoint = graph.OtherEnd(graphEdge.Track, approachedPoint.Id)
 					found = true
 					break
 				}
@@ -282,4 +283,10 @@ type Path struct {
 	Edges []*GraphEdge
 
 	IncludesReserved bool
+}
+
+func (path *Path) PPrint() {
+	for _, edge := range path.Edges {
+		fmt.Printf("%s -> %s (%s) --> ", edge.From.Id, edge.To.Id, edge.Track.Id)
+	}
 }

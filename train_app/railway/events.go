@@ -13,11 +13,14 @@ const (
 	TrainDeparted RailwayEvent = "TRAIN_DEPART"
 
 	// TRK //
-	TrackReserved RailwayEvent = "TRACK_RESERVE"
-	TrackEntered  RailwayEvent = "TRACK_ENTER"
-	TrackOccupied RailwayEvent = "TRACK_OCCUPY"
-	TrackExited   RailwayEvent = "TRACK_EXIT"
-	TrackReleased RailwayEvent = "TRACK_RELEASE"
+	// TrackReserved  RailwayEvent = "TRACK_RESERVE"
+	TrackEntered RailwayEvent = "TRACK_ENTER"
+	// TrackOccupied  RailwayEvent = "TRACK_OCCUPY"
+	TrackTravelEnd RailwayEvent = "TRACK_TRAVEL_END"
+	TrackExited    RailwayEvent = "TRACK_EXITED"
+	// TrackReleased  RailwayEvent = "TRACK_RELEASE"
+
+	PathCompleted RailwayEvent = "PATH_COMPLETED"
 
 	// SWT //
 	SwitchSet RailwayEvent = "SWITCH_SET"

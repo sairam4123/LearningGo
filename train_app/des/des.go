@@ -2,7 +2,10 @@ package des
 
 import (
 	"container/heap"
+	"fmt"
 )
+
+const MinDeltaTime = 0.01
 
 type Event[T comparable] struct {
 	Time      float64
@@ -49,6 +52,11 @@ func (d *DES[T]) Init() {
 }
 
 func (d *DES[T]) Add(eventTime float64, evtype T, data any) {
+	if eventTime < d.CurTime+MinDeltaTime {
+		fmt.Println("Event time is below minimum time")
+		return
+	}
+
 	heap.Push(&d.eq, Event[T]{
 		Time:      eventTime,
 		CreatedAt: d.CurTime,

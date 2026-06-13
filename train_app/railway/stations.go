@@ -1,6 +1,9 @@
 package railway
 
-import "trainapp/units"
+import (
+	"fmt"
+	"trainapp/units"
+)
 
 type Station struct {
 	Code string
@@ -23,6 +26,9 @@ func (stn *Station) Init() {
 }
 
 func (stn *Station) AddPlatform(pfData *Platform) {
+	if pfData.Track == nil {
+		fmt.Printf("[WARN] pfData.track is nil, did u pass the track?")
+	}
 	if pfData.Id == "" {
 		pfData.Id = pfData.Track.Id
 	}

@@ -2,6 +2,8 @@ package railway
 
 import "fmt"
 
+// import "fmt"
+
 type PathController struct {
 	Id string
 
@@ -11,14 +13,16 @@ type PathController struct {
 	sim   *Sim
 }
 
-func (pathCtrller *PathController) ReservePath() error {
-	for _, edge := range pathCtrller.path.Edges {
-		if edge.Track.IsReserved() || edge.Track.IsOccupied() {
-			return fmt.Errorf("Cannot reserve path when %s is already reserved or occupied, bailing out.", edge.Track.Id)
+func (path *Path) EnsureAllEdgesAreReserved(train *Train) bool {
+	for _, edge := range path.Edges {
+		fmt.Println(edge.Track.Id, edge.Track.IsOccupied(), edge.Track.IsReserved(), edge.Track.OccupiedBy, edge.Track.ReservedBy, train)
+		if !edge.Track.IsReserved() || edge.Track.ReservedBy.Number != train.Number {
+			return false
 		}
-
-		edge.Track.Reserve(pathCtrller.train)
+		if edge.Track.IsOccupied() && edge.Track.OccupiedBy.Number != train.Number {
+			return false
+		}
 	}
 
-	return nil
+	return true
 }
